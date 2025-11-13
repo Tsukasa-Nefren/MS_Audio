@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Audio.Shared</AssemblyName>
+    <RootNamespace>Audio</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModSharp.Sharp.Shared" Version="*" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\modsharp\Sharp.Shared\Sharp.Shared.csproj" Private="false" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <Target Name="CopyToSharedFolder" AfterTargets="Build">
+    <PropertyGroup>
+      <SharedFolder>$(MSBuildProjectDirectory)\..\..\modsharp\sharp\shared\Audio.Shared</SharedFolder>
+    </PropertyGroup>
+    <MakeDir Directories="$(SharedFolder)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SharedFolder)" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).deps.json" DestinationFolder="$(SharedFolder)" Condition="Exists('$(TargetDir)$(TargetName).deps.json')" />
+    <Message Text="[Audio.Shared] Copied to shared folder: $(SharedFolder)" />
+  </Target>
+
+</Project>
+

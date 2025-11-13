@@ -8,3 +8,10 @@ build/
 .vscode/
 deps/
 
+# C# build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+

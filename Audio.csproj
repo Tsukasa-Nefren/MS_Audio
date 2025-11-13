@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Audio</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    
+    <FfmpegZipUrl>https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip</FfmpegZipUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModSharp.Sharp.Shared" Version="*" PrivateAssets="all" />
+    <PackageReference Include="Concentus" Version="1.1.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\modsharp\Sharp.Shared\Sharp.Shared.csproj" Private="false" ExcludeAssets="runtime" />
+    <ProjectReference Include="Shared\Audio.Shared.csproj" Private="false" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="IAudio.cs" />
+    <Compile Remove="Shared\**" />
+  </ItemGroup>
+
+  <Target Name="CleanupFrameworkAssemblies" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <FilesToDelete Include="$(OutDir)Microsoft.Extensions.*.dll" />
+      <FilesToDelete Include="$(OutDir)System.*.dll" />
+      <FilesToDelete Include="$(OutDir)Google.Protobuf.dll" />
+      <FilesToDelete Include="$(OutDir)Sharp.Shared.dll" />
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="PrepareFfmpegScript" BeforeTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <ToolsPs1>$(IntermediateOutputPath)download-ffmpeg.ps1</ToolsPs1>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Ps1Lines Include="$ErrorActionPreference = 'Stop'" />
+      <Ps1Lines Include="[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12" />
+      <Ps1Lines Include="$ToolsDir = (Get-Location).ProviderPath" />
+      <Ps1Lines Include="Write-Host &quot;[FetchTools] Working Directory: $ToolsDir&quot;" />
+      <Ps1Lines Include="$ff  = Join-Path $ToolsDir 'ffmpeg.exe'" />
+      <Ps1Lines Include="$zip = Join-Path $ToolsDir 'ffmpeg.zip'" />
+      <Ps1Lines Include="$unz = Join-Path $ToolsDir 'ffmpeg_zip'" />
+      
+      <Ps1Lines Include="if (Test-Path $ff) { Write-Host '[FetchTools] ffmpeg.exe already exists. Skipping.' } else {" />
+      <Ps1Lines Include="  Write-Host '[FetchTools] Downloading ffmpeg...'" />
+      <Ps1Lines Include="  try {" />
+      <Ps1Lines Include="    if (Test-Path $unz) { Remove-Item $unz -Recurse -Force }" />
+      <Ps1Lines Include="    if (Test-Path $zip) { Remove-Item $zip -Force }" />
+      <Ps1Lines Include="    Invoke-WebRequest -Uri '$(FfmpegZipUrl)' -OutFile $zip -UseBasicParsing -TimeoutSec 300" />
+      <Ps1Lines Include="    Write-Host '[FetchTools] Extracting ffmpeg...'" />
+      <Ps1Lines Include="    Add-Type -AssemblyName System.IO.Compression.FileSystem" />
+      <Ps1Lines Include="    [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $unz)" />
+      <Ps1Lines Include="    $found = Get-ChildItem $unz -Recurse -Filter ffmpeg.exe | Select-Object -First 1" />
+      <Ps1Lines Include="    if ($found) { Copy-Item $found.FullName $ff -Force; Write-Host '[FetchTools] ffmpeg.exe extracted successfully.' } else { Write-Host '[FetchTools] ERROR: ffmpeg.exe not found in zip archive.' }" />
+      <Ps1Lines Include="  } catch { Write-Host (&quot;[FetchTools] WARNING: Failed to download or extract ffmpeg: {0}&quot; -f $_.Exception.Message) }" />
+      <Ps1Lines Include="  finally {" />
+      <Ps1Lines Include="    if (Test-Path $zip) { Remove-Item $zip -Force }" />
+      <Ps1Lines Include="    if (Test-Path $unz) { Remove-Item $unz -Recurse -Force }" />
+      <Ps1Lines Include="  }" />
+      <Ps1Lines Include="}" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(ToolsPs1)" Lines="@(Ps1Lines)" Overwrite="true" />
+  </Target>
+
+  <Target Name="DownloadFfmpegAfterBuild" AfterTargets="Build" DependsOnTargets="PrepareFfmpegScript" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <ToolsPs1Full>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)download-ffmpeg.ps1</ToolsPs1Full>
+      <PowerShellPath Condition="'$(PowerShellPath)' == ''">$(WINDIR)\System32\WindowsPowerShell\v1.0\powershell.exe</PowerShellPath>
+    </PropertyGroup>
+
+    <Message Text="[FetchTools] PowerShell script location: $(ToolsPs1Full)" />
+    <Message Text="[FetchTools] PowerShell executable: $(PowerShellPath)" />
+    
+    <Exec
+      WorkingDirectory="$(TargetDir)"
+      IgnoreExitCode="true"
+      Command="&quot;$(PowerShellPath)&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;$(ToolsPs1Full)&quot;" />
+  </Target>
+
+</Project>
