@@ -1,36 +1,24 @@
-# Audio
-A demo and a metamod lib to provide similar functions to the previous SM-Ext-Audio extension in csgo, that is, sending custom audio streams such as a song through a bot's voice chat.
+# Audio (ModSharp)
 
-## Table of Contents
-- [Demo](#demo)
-- [Prerequisites](#prerequisites)
-- [LINUX USER MUST READ](#linux-user-must-read)
-- [API Usage](#api-usage)
-- [Crash / Not working](#crash--not-working)
-- [Credits](#credits)
+ModSharp용 Audio 플러그인으로, CS2 서버에서 봇의 음성 채팅을 통해 커스텀 오디오 스트림(예: 음악)을 전송할 수 있게 해줍니다.
 
-## Demo
-*unmute the video*
-<div><video controls src="https://github.com/user-attachments/assets/27ca1fd5-6ae7-4d1f-be66-aa0bbea2fa22"></video></div>
+원본 metamod 플러그인을 ModSharp용으로 포팅한 버전입니다.
 
-## Prerequisites
-1. ffmpeg installed and can be found in your PATH.
-2. If you use swiftly, download file that starts with `swext_` and put it into your swiftly extension folder.
+## 프로젝트 구조
 
-## LINUX USER MUST READ
-If you are using linux and want to use it in counterstrikesharp, after you installed the plugin you need to execute this (replace `{YOUR VERSION}` with your actual dir name)
+- `Audio.csproj` - 메인 프로젝트 파일
+- `Shared/Audio.Shared.csproj` - 공유 프로젝트
+- `public/Audio.cs` - 공개 API
+
+## 빌드
+
+프로젝트를 빌드하려면:
+
+```bash
+dotnet build
 ```
-ln -s /path/to/game/csgo/addons/audio/bin/audio.so /path/to/game/csgo/addons/counterstrikesharp/dotnet/shared/Microsoft.NETCore.App/{YOUR VERSION}/audio.so
-```
-in your server root directory.
 
-## API Usage
-See [Wiki](https://github.com/samyycX/Audio/wiki/API-Usage)
+## 사용법
 
-## Crash / Not working
-I don't have the ability to fully test this plugin, if you have any problem, please submit an issue and describe your problem as precise as you can.
+자세한 API 사용법은 코드를 참고하세요.
 
-## Credits
-- **CS2Fixes**: Copied some codes from it.
-- **multiaddonmanager**: Copied some codes from it.
-- Many helps from **Poggu**.
